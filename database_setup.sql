@@ -50,8 +50,6 @@ CREATE TABLE IF NOT EXISTS FoodInDiningHall (
     FOREIGN KEY (f_id) REFERENCES Food(f_id)
 );
 
--- See readme for instructions on how to import the food table values.
-
 insert into dininghall(dh_name) values ("Bolton");
 
 insert into dininghall(dh_name) values ("Snelling");
@@ -61,5 +59,6 @@ insert into dininghall(dh_name) values ("O-House");
 insert into dininghall(dh_name) values ("Joe Frank");
 
 insert into dininghall(dh_name) values ("The Niche");
-    
+
+-- See readme for instructions on how to import the food and FoodInDiningHall table values.
 

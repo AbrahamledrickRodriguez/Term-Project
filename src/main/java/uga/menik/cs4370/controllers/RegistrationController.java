@@ -50,9 +50,7 @@ public class RegistrationController {
     @PostMapping
     public String register(@RequestParam("username") String username,
             @RequestParam("password") String password,
-            @RequestParam("passwordRepeat") String passwordRepeat,
-            @RequestParam("firstName") String firstName,
-            @RequestParam("lastName") String lastName) throws UnsupportedEncodingException {
+            @RequestParam("passwordRepeat") String passwordRepeat) throws UnsupportedEncodingException {
         if (password.trim().length() < 3) {
             String message = URLEncoder.encode("Passwords should have at least 3 nonempty letters.", "UTF-8");
             return "redirect:/register?error=" + message;
@@ -64,8 +62,7 @@ public class RegistrationController {
         }
 
         try {
-            boolean registrationSuccess = userService.registerUser(username,
-                    password, firstName, lastName);
+            boolean registrationSuccess = userService.registerUser(username, password);
             if (registrationSuccess) {
                 return "redirect:/login";
             } else {
@@ -79,5 +76,4 @@ public class RegistrationController {
             return "redirect:/register?error=" + message;
         }
     }
-
 }

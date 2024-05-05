@@ -69,7 +69,7 @@ public class HomeController {
 
         return mv;
     }
-@PostMapping("/createpost")
+@PostMapping("/createmealplan")
 public String createMealPlan(@RequestParam(name = "mealPlanName") String mealPlanName, 
                              @RequestParam(name = "diningHallId") int diningHallId,
                              RedirectAttributes redirectAttributes) {

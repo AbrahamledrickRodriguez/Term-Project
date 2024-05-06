@@ -1,0 +1,33 @@
+<!--
+Copyright (c) 2024 Sami Menik, PhD. All rights reserved.
+
+This is a project developed by Dr. Menik to give the students an opportunity to apply database concepts learned in the class in a real world project. Permission is granted to host a running version of this software and to use images or videos of this work solely for the purpose of demonstrating the work to potential employers. Any form of reproduction, distribution, or transmission of the software's source code, in part or whole, without the prior written consent of the copyright owner, is strictly prohibited.
+-->
+<div class="post framed">
+    <div class="post-body">
+        <div class="username">
+            <a href="/mealplans/">{{mealPlanName}}</a>
+        </div>
+        <p id="name"></p>
+        <script>
+        let name;
+        switch(diningHallId) {
+            case 1:
+                name = "Bolton Dining Commons"
+                break;
+            case 2:
+                name = "Snelling Dining Commons"
+                break;
+            case 3:
+                name = "Oglethorpe Dining Commons"
+                break;
+            case 4:
+                name = "Joe Frank Harris Dining Commons"
+                break;
+            case 5:
+                name = "The Niche Dining Commons"
+        }
+        document.getElementById("name").innerHTML = name;
+        </script>
+    </div>
+</div>

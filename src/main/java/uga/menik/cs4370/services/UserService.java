@@ -62,7 +62,7 @@ public class UserService {
                     String storedPasswordHash = rs.getString("password");
                     boolean isPassMatch = passwordEncoder.matches(password, storedPasswordHash);
                     if (isPassMatch) {
-                        String userId = rs.getString("u_id");  // Changed to getString to handle userId as a String
+                        int userId = rs.getInt("u_id");  // Changed to getString to handle userId as a String
                         String retrievedUsername = rs.getString("username");
                         // Assuming you don't actually store the plain text password and it's just for class instantiation
                         loggedInUser = new Users(userId, retrievedUsername, password);
@@ -121,8 +121,6 @@ public class UserService {
     public boolean registerUser(String username, String password)
             throws SQLException {
         final String registerSql = "insert into user (username, password) values (?, ?)";
-
-        System.out.println("I ran!");
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement registerStmt = conn.prepareStatement(registerSql)) {

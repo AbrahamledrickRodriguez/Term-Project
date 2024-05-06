@@ -58,7 +58,7 @@ public ModelAndView webpage(@PathVariable("postId") String postId,
     ModelAndView mv = new ModelAndView("posts_page");
 
     try {
-        String userId = userService.getLoggedInUser().getUserId();
+        int userId = userService.getLoggedInUser().getUserId();
 
         ExpandedPost posts = postService.getExpandedPostWithComments(postId, userId);
 
@@ -93,7 +93,7 @@ public ModelAndView webpage(@PathVariable("postId") String postId,
                               RedirectAttributes redirectAttributes) {
         System.out.println("User is attempting to add a comment: postId=" + postId + ", comment=" + commentText);
     
-        String userId = userService.getLoggedInUser().getUserId();
+        int userId = userService.getLoggedInUser().getUserId();
     
         boolean commentAdded = postService.addComment(postId, userId, commentText);
         if (commentAdded) {
@@ -113,7 +113,7 @@ public ModelAndView webpage(@PathVariable("postId") String postId,
     
      @GetMapping("/{postId}/heart/{isAdd}")
      public String addOrRemoveHeart(@PathVariable("postId") String postId, @PathVariable("isAdd") Boolean isAdd) {
-         String loggedInUserId = userService.getLoggedInUser().getUserId();
+         int loggedInUserId = userService.getLoggedInUser().getUserId();
      
          if (Boolean.TRUE.equals(isAdd)) {
              postService.addHeart(postId, loggedInUserId);
@@ -131,7 +131,7 @@ public ModelAndView webpage(@PathVariable("postId") String postId,
      */
     @GetMapping("/{postId}/bookmark/{isAdd}")
     public String addOrRemoveBookmark(@PathVariable("postId") String postId, @PathVariable("isAdd") Boolean isAdd) {
-        String userId = userService.getLoggedInUser().getUserId(); 
+        int userId = userService.getLoggedInUser().getUserId(); 
         String sql;
     
         if (isAdd) {
@@ -142,7 +142,7 @@ public ModelAndView webpage(@PathVariable("postId") String postId,
     
         try (Connection conn = dataSource.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
-            pstmt.setString(2, userId);
+            pstmt.setInt(2, userId);
     
             pstmt.executeUpdate();
             return "redirect:/bookmarks";

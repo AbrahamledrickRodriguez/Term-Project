@@ -13,7 +13,7 @@ public class User {
     /**
      * Unique identifier for the user.
      */
-    private final String userId;
+    private final int userId;
 
     /**
      * First name of the user.
@@ -38,7 +38,7 @@ public class User {
      * @param lastName         the last name of the user
      * @param profileImagePath the path of the profile image file for the user
      */
-    public User(String userId, String firstName, String lastName, String profileImagePath) {
+    public User(int userId, String firstName, String lastName, String profileImagePath) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -53,15 +53,16 @@ public class User {
      * @param lastName         the last name of the user
      * @param profileImagePath the path of the profile image file for the user
      */
-    public User(String userId, String firstName, String lastName) {
+    public User(int userId, String firstName, String lastName) {
         this(userId, firstName, lastName, getAvatarPath(userId));
     }
 
     /**
      * Given a userId generate a valid avatar path.
      */
-    private static String getAvatarPath(String userId) {
-        int fileNo = (userId.hashCode() % 20) + 1;
+    private static String getAvatarPath(int userId) {
+        String stringUserId = String.valueOf(userId);
+        int fileNo = (stringUserId.hashCode() % 20) + 1;
         String avatarFileName = String.format("avatar_%d.png", fileNo);
         return "/avatars/" + avatarFileName;
     }
@@ -71,7 +72,7 @@ public class User {
      *
      * @return the user ID
      */
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 

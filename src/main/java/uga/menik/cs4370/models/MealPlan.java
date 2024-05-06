@@ -18,7 +18,7 @@ public class MealPlan {
     /**
      * User ID associated with this meal plan.
      */
-    private final String userId;  // Changed from int to String
+    private final int userId;  // Changed from int to String
 
     /**
      * Dining Hall ID associated with this meal plan.
@@ -33,7 +33,7 @@ public class MealPlan {
      * @param userId         the user ID (as a String) associated with the meal plan
      * @param diningHallId   the dining hall ID associated with the meal plan
      */
-    public MealPlan(int mealPlanId, String mealPlanName, String userId, int diningHallId) {
+    public MealPlan(int mealPlanId, String mealPlanName, int userId, int diningHallId) {
         this.mealPlanId = mealPlanId;
         this.mealPlanName = mealPlanName;
         this.userId = userId;
@@ -63,7 +63,7 @@ public class MealPlan {
      *
      * @return the user ID as a String
      */
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 

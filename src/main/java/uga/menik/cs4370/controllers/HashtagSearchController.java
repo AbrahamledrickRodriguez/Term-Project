@@ -48,7 +48,7 @@ public class HashtagSearchController {
                                          .map(h -> h.startsWith("#") ? h.substring(1) : h)
                                          .collect(Collectors.toList());
     
-        String loggedInUserId = userService.getLoggedInUser().getUserId(); 
+        int loggedInUserId = userService.getLoggedInUser().getUserId(); 
         List<Post> posts = postService.searchPostsByHashtags(hashtagList, loggedInUserId);
     
         mv.addObject("posts", posts);

@@ -32,7 +32,7 @@ public class FollowableUser extends User {
      *                         user
      * @param lastActiveDate   the date and time that this user has last made a post.
      */
-    public FollowableUser(String userId, String firstName, String lastName, String profileImageName,
+    public FollowableUser(int userId, String firstName, String lastName, String profileImageName,
             boolean isFollowed, String lastActiveDate) {
         super(userId, firstName, lastName, profileImageName);
         this.isFollowed = isFollowed;
@@ -49,7 +49,7 @@ public class FollowableUser extends User {
      *                         user
      * @param lastActiveDate   the date and time that this user has last made a post.
      */
-    public FollowableUser(String userId, String firstName, String lastName,
+    public FollowableUser(int userId, String firstName, String lastName,
             boolean isFollowed, String lastActiveDate) {
         super(userId, firstName, lastName);
         this.isFollowed = isFollowed;

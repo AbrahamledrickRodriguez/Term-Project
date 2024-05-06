@@ -46,17 +46,26 @@ public class PostService {
  * @return MealPlan The newly created meal plan object.
  * @throws SQLException If any SQL operations fail.
  */
-public MealPlan createMealPlan(String mealPlanName, String userId, int diningHallId) throws SQLException {
+public MealPlan createMealPlan(String mealPlanName, int userId, String diningHallName) throws SQLException {
     final String insertMealPlanSql = "INSERT INTO MealPlan (m_name, u_id, dh_id) VALUES (?, ?, ?)";
     final String userQuerySql = "SELECT * FROM user WHERE u_id = ?";
-    final String diningHallQuerySql = "SELECT * FROM dininghall WHERE dh_id = ?";
+    final String diningHallQuerySql = "SELECT * FROM dininghall WHERE dh_name = ?";
 
     MealPlan newMealPlan = null;
 
     try (Connection conn = dataSource.getConnection()) {
         try (PreparedStatement insertMealPlanStmt = conn.prepareStatement(insertMealPlanSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             insertMealPlanStmt.setString(1, mealPlanName);
-            insertMealPlanStmt.setString(2, userId); // Changed to setString
+            insertMealPlanStmt.setInt(2, userId); // Changed to setString
+            final String getId = "SELECT dh_id FROM dininghall WHERE dh_name = ?";
+            int diningHallId;
+            try(PreparedStatement getIdStmt = conn.prepareStatement(getId)) {
+                getIdStmt.setString(1, diningHallName);
+                try(ResultSet rs = getIdStmt.executeQuery()) {
+                    rs.next();
+                    diningHallId = rs.getInt("dh_id");
+                }
+            }
             insertMealPlanStmt.setInt(3, diningHallId);
             int affectedRows = insertMealPlanStmt.executeUpdate();
 
@@ -72,24 +81,24 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
                     User user = null;
                     DiningHall diningHall = null;
                     try (PreparedStatement userQueryStmt = conn.prepareStatement(userQuerySql)) {
-                        userQueryStmt.setString(1, userId); // Changed to setString
+                        userQueryStmt.setInt(1, userId); // Changed to setString
                         ResultSet userRs = userQueryStmt.executeQuery();
                         if (userRs.next()) {
                             user = new User(userId, userRs.getString("username"), userRs.getString("password"));
                         }
                     }
                     try (PreparedStatement diningHallQueryStmt = conn.prepareStatement(diningHallQuerySql)) {
-                        diningHallQueryStmt.setInt(1, diningHallId);
+                        diningHallQueryStmt.setString(1, diningHallName);
                         ResultSet dhRs = diningHallQueryStmt.executeQuery();
                         if (dhRs.next()) {
-                            diningHall = new DiningHall(diningHallId, dhRs.getString("dh_name"));
+                            diningHall = new DiningHall(diningHallId, diningHallName);
                         }
                     }
                     if (user != null && diningHall != null) {
                         newMealPlan = new MealPlan(mealPlanId, mealPlanName, userId, diningHallId);
+                    } else {
+                        throw new SQLException("Creating meal plan failed, no ID obtained.");
                     }
-                } else {
-                    throw new SQLException("Creating meal plan failed, no ID obtained.");
                 }
             }
         }
@@ -97,67 +106,41 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
     return newMealPlan;
 }
 
-    public List<Post> getPostsFromFollowedUsers(String loggedInUserId) {
-        List<Post> posts = new ArrayList<>();
+    public List<MealPlan> getMyMealPlans(int loggedInUserId) {
+        List<MealPlan> mealplans = new ArrayList<>();
         final String sql = 
-            "SELECT p.*, " +
-            "u.userId, u.firstName, u.lastName, " +
-            "(SELECT COUNT(*) FROM heart WHERE postId = p.postId) AS heartsCount, " +
-            "(SELECT COUNT(*) FROM comment WHERE postId = p.postId) AS commentsCount, " +
-            "COUNT(distinct h.userId) > 0 AS isHearted, " +
-            "COUNT(distinct b.userId) > 0 AS isBookmarked " +
-            "FROM post p " +
-            "JOIN follow f ON p.userId = f.followeeUserId " +
-            "JOIN user u ON p.userId = u.userId " +
-            "LEFT JOIN heart h ON p.postId = h.postId AND h.userId = ? " +
-            "LEFT JOIN bookmark b ON p.postId = b.postId AND b.userId = ? " +
-            "WHERE f.followerUserId = ? " +
-            "GROUP BY p.postId, u.userId, u.firstName, u.lastName " +
-            "ORDER BY p.postDate DESC";
+            "SELECT m_id, m_name, dh_id FROM MealPlan where u_id = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, loggedInUserId);
-            pstmt.setString(2, loggedInUserId);
-            pstmt.setString(3, loggedInUserId);
+            pstmt.setInt(1, loggedInUserId);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    Post post = mapRowToPost(rs);
-                    posts.add(post);
+                    MealPlan mealplan = mapRowToMealPlan(rs);
+                    mealplans.add(mealplan);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return posts;
+        System.out.println(mealplans.isEmpty());
+        return mealplans;
     }
 
-    private Post mapRowToPost(ResultSet rs) throws SQLException {
-        String postId = rs.getString("postId");
-        String postText = rs.getString("postText");
-        Timestamp postDate = rs.getTimestamp("postDate");
-        int heartsCount = rs.getInt("heartsCount");
-        int commentsCount = rs.getInt("commentsCount");
-        boolean isHearted = rs.getBoolean("isHearted");
-        boolean isBookmarked = rs.getBoolean("isBookmarked");
-        
-        String userId = rs.getString("userId");
-        String firstName = rs.getString("firstName");
-        String lastName = rs.getString("lastName");
-        
-        User user = new User(userId, firstName, lastName);
-        
-        String formattedDate = new SimpleDateFormat("MMM dd, yyyy, HH:mm").format(postDate);
-        
-        return new Post(postId, postText, formattedDate, user, heartsCount, commentsCount, isHearted, isBookmarked);
+    private MealPlan mapRowToMealPlan(ResultSet rs) throws SQLException {
+        int mealPlanId = rs.getInt("m_id");
+        String mealPlanName = rs.getString("m_name");
+        int diningHallId = rs.getInt("dh_id");
+        int userId = userService.getLoggedInUser().getUserId();
+        return new MealPlan(mealPlanId, mealPlanName, userId, diningHallId);
     }
-    public boolean addComment(String postId, String userId, String commentText) {
+    public boolean addComment(String postId, int userId, String commentText) {
         final String sql = "INSERT INTO comment (postId, userId, commentText, commentDate) VALUES (?, ?, ?, NOW())";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
-            pstmt.setString(2, userId);
+            pstmt.setInt(2, userId);
             pstmt.setString(3, commentText);
             int affectedRows = pstmt.executeUpdate();
             return affectedRows > 0;
@@ -167,7 +150,7 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
         }
     }
     
-    public ExpandedPost getExpandedPostWithComments(String postId, String userId) throws SQLException {
+    public ExpandedPost getExpandedPostWithComments(String postId, int userId) throws SQLException {
         List<Comment> comments = new ArrayList<>();
         ExpandedPost expandedPost = null;
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy, HH:mm");
@@ -191,14 +174,14 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
         try (Connection conn = dataSource.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, userId);
-            pstmt.setString(2, userId);
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, userId);
             pstmt.setString(3, postId);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     if (expandedPost == null) {
-                        User postUser = new User(rs.getString("postUserId"), rs.getString("postFirstName"), rs.getString("postLastName"));
+                        User postUser = new User(rs.getInt("postUserId"), rs.getString("postFirstName"), rs.getString("postLastName"));
                         Timestamp postDateTimestamp = rs.getTimestamp("postDate");
                         String formattedPostDate = dateFormat.format(postDateTimestamp);
 
@@ -213,7 +196,7 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
 
                     String commentId = rs.getString("commentId");
                     if (commentId != null) {
-                        User commentUser = new User(rs.getString("commentUserId"), rs.getString("commentFirstName"), rs.getString("commentLastName"));
+                        User commentUser = new User(rs.getInt("commentUserId"), rs.getString("commentFirstName"), rs.getString("commentLastName"));
                         Timestamp commentDateTimestamp = rs.getTimestamp("commentDate");
                         String formattedCommentDate = dateFormat.format(commentDateTimestamp);
 
@@ -231,9 +214,9 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
         return expandedPost;
     }
 
-    public List<Post> searchPostsByHashtags(List<String> hashtags, String userId) {
+    public List<Post> searchPostsByHashtags(List<String> hashtags, int userId) {
         List<Post> posts = new ArrayList<>();
-        if (hashtags.isEmpty() || userId == null || userId.isEmpty()) {
+        if (hashtags.isEmpty()) {
             return posts;
         }
     
@@ -242,15 +225,15 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
         try (Connection conn = dataSource.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
     
-            pstmt.setString(1, userId);
-            pstmt.setString(2, userId);
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, userId);
             for (int i = 0; i < hashtags.size(); i++) {
                 pstmt.setString(3 + i, hashtags.get(i));
             }
     
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    User user = new User(rs.getString("userId"), rs.getString("firstName"), rs.getString("lastName"));
+                    User user = new User(rs.getInt("userId"), rs.getString("firstName"), rs.getString("lastName"));
                     Post post = new Post(rs.getString("postId"), rs.getString("postText"), rs.getTimestamp("postDate").toString(),
                                          user, rs.getInt("heartsCount"), rs.getInt("commentsCount"), 
                                          rs.getBoolean("isLiked"), rs.getBoolean("isBookmarked"));
@@ -263,7 +246,7 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
     
         return posts;
     }
-    private String constructHashtagSearchSql(int hashtagsCount, String userId) {
+    private String constructHashtagSearchSql(int hashtagsCount, int userId) {
         String sql = "SELECT p.postId, p.postText, p.postDate, " +
                      "u.userId, u.firstName, u.lastName, " +
                      "(SELECT COUNT(*) FROM heart WHERE postId = p.postId) AS heartsCount, " +
@@ -286,12 +269,12 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
     
         return sql;
     }
-    public boolean removeHeart(String postId, String userId) {
+    public boolean removeHeart(String postId, int userId) {
         final String deleteHeartSql = "DELETE FROM heart WHERE postId = ? AND userId = ?";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement deleteHeartStmt = conn.prepareStatement(deleteHeartSql)) {
             deleteHeartStmt.setString(1, postId);
-            deleteHeartStmt.setString(2, userId);
+            deleteHeartStmt.setInt(2, userId);
             int affectedRows = deleteHeartStmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
@@ -299,12 +282,12 @@ public MealPlan createMealPlan(String mealPlanName, String userId, int diningHal
             return false;
         }
     }
-    public boolean addHeart(String postId, String userId) {
+    public boolean addHeart(String postId, int userId) {
         final String insertHeartSql = "INSERT INTO heart (postId, userId) VALUES (?, ?) ON DUPLICATE KEY UPDATE postId=postId;";
         try (Connection conn = dataSource.getConnection();
              PreparedStatement insertHeartStmt = conn.prepareStatement(insertHeartSql)) {
             insertHeartStmt.setString(1, postId);
-            insertHeartStmt.setString(2, userId);
+            insertHeartStmt.setInt(2, userId);
             int affectedRows = insertHeartStmt.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {

@@ -8,7 +8,7 @@ public class Users {
     /**
      * Unique identifier for the user.
      */
-    private final String userId;  // Changed from int to String
+    private final int userId;  // Changed from int to String
 
     /**
      * Username of the user.
@@ -27,7 +27,7 @@ public class Users {
      * @param username  the username of the user
      * @param password  the password of the user
      */
-    public Users(String userId, String username, String password) {
+    public Users(int userId, String username, String password) {
         this.userId = userId;
         this.username = username;
         this.password = password;
@@ -38,7 +38,7 @@ public class Users {
      *
      * @return the user ID as a String
      */
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 

@@ -47,7 +47,7 @@ private DataSource dataSource;
     @GetMapping
 public ModelAndView webpage() {
     ModelAndView mv = new ModelAndView("posts_page");
-    String userId = userService.getLoggedInUser().getUserId();
+    int userId = userService.getLoggedInUser().getUserId();
     List<Post> posts = getBookmarkedPosts(userId);
 
     mv.addObject("posts", posts);
@@ -61,7 +61,7 @@ public ModelAndView webpage() {
 }
 
 
-    private List<Post> getBookmarkedPosts(String userId) {
+    private List<Post> getBookmarkedPosts(int userId) {
         List<Post> bookmarkedPosts = new ArrayList<>();
         final String sql = 
             "SELECT p.postId, p.postText, p.postDate, " +
@@ -76,13 +76,13 @@ public ModelAndView webpage() {
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, userId);
-            pstmt.setString(2, userId);
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, userId);
 
             SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy, HH:mm");
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    User user = new User(rs.getString("userId"), rs.getString("firstName"), rs.getString("lastName"));
+                    User user = new User(rs.getInt("userId"), rs.getString("firstName"), rs.getString("lastName"));
                     Timestamp postDate = rs.getTimestamp("postDate");
                     String formattedDate = dateFormat.format(postDate);
                     Post post = new Post(

@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import uga.menik.cs4370.models.Post;
+import uga.menik.cs4370.models.MealPlan;
 import uga.menik.cs4370.services.PostService;
 import uga.menik.cs4370.services.UserService;
 
@@ -55,11 +56,11 @@ public class HomeController {
             return mv;
         }
 
-        String loggedInUserId = userService.getLoggedInUser().getUserId();
-        List<Post> posts = postService.getPostsFromFollowedUsers(loggedInUserId);
-        mv.addObject("posts", posts);
+        int loggedInUserId = userService.getLoggedInUser().getUserId();
+        List<MealPlan> mealplans = postService.getMyMealPlans(loggedInUserId);
+        mv.addObject("posts", mealplans);
 
-        if (posts.isEmpty()) {
+        if (mealplans.isEmpty()) {
             mv.addObject("isNoContent", true);
         }
 
@@ -69,22 +70,4 @@ public class HomeController {
 
         return mv;
     }
-@PostMapping("/createmealplan")
-public String createMealPlan(@RequestParam(name = "mealPlanName") String mealPlanName, 
-                             @RequestParam(name = "diningHallId") int diningHallId,
-                             RedirectAttributes redirectAttributes) {
-    try {
-        if (!userService.isAuthenticated()) {
-            return "redirect:/login";
-        }
-        String userId = userService.getLoggedInUser().getUserId();  // Assuming getUserId returns a String
-        postService.createMealPlan(mealPlanName, userId, diningHallId);  // Correct usage of the service instance
-        return "redirect:/";
-    } catch (SQLException e) {
-        e.printStackTrace();
-        String errorMessage = URLEncoder.encode("Failed to create the meal plan. Please try again.", StandardCharsets.UTF_8);
-        redirectAttributes.addAttribute("error", errorMessage);
-        return "redirect:/";
-    }
-}
 }
